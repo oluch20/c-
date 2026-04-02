@@ -1,0 +1,8 @@
+{
+  "code-runner.runInTerminal": true,
+  "code-runner.clearPreviousOutput": true,
+  "code-runner.preserveFocus": false,
+  "code-runner.executorMap": {
+    "cpp": "cd $dir ; C:/msys64/ucrt64/bin/g++.exe -std=c++17 -Wall -Wextra -pedantic $fileName -o $fileNameWithoutExt.exe ; if ($?) { ./$fileNameWithoutExt.exe }"
+  }
+}
