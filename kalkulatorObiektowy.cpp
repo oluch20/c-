@@ -1,8 +1,5 @@
 #include <iostream>
-
-// zmienić program tak, aby jedna zmienna była przechowywana w main, a druga w klasie. wszystkie wywołania mają być poprzez this -> (pierwszym parametrem ma być sama funkcja)
-// zrobić drugą klasę, która przechowuje stan
-// wywalić zmienną op do main
+using namespace std;
 
 class State
 {
@@ -18,110 +15,156 @@ public:
     int GetState() { return state; };
 };
 
-class MyInt
+class MyVariable
 {
-    int value;
-    float a;
-    State state;
-    // int state = 0; // 0 - correct, 1 - error (/ 0), 2 - error (incorrect operator)
+    int a;
+    int b;
+    char myOperator;
+    float result;
+
 public:
-    void setA(float x) { a = x; }
+    // ------ a ------
+    void setA(int x) { a = x; }
+    int getA() { return (a); }
 
-    int getvalue() { return (value); }
+    // ------ b ------
+    void setB(int x) { b = x; }
+    int getB() { return (b); }
 
-    int Add(int _b)
+    // ------ myOperator ------
+    void setOperator(char x) { myOperator = x; }
+    char getOperator() { return (myOperator); }
+
+    // ------ result ------
+    void setResult(float x) { result = x; }
+    int getResult() { return (result); }
+
+    // ------ constructor ------
+
+    // MyVariable(int _a, int _b)
+    // {
+    //     this->a = _a;
+    //     this->b = _b;
+    // };
+    MyVariable() {};
+};
+
+class Calc
+{
+    MyVariable variable;
+
+    // 0 - correct, 1 - error (/ 0), 2 - error (incorrect operator)
+    State state;
+
+public:
+    Calc()
     {
-        return (this->value + _b);
+        variable = MyVariable();
+        state = State(0);
     }
 
-    int Mul(int _b)
+    // ------------- variable -------------
+
+    //set
+    void setA(int _a) { this->variable.setA(_a); }
+    void setB(int _b) { this->variable.setB(_b); }
+    void setOperator(char _myOperator) { this->variable.setOperator(_myOperator); }
+    //get
+    char getOperator () {return (this->variable.getOperator()); }
+    float getResult() { return (this->variable.getResult()); }
+
+    // ------------- State -------------
+
+    int getState()
     {
-        return (this->value * _b);
-    }
-    int Sub(int _b)
-    {
-        return (this->value - _b);
-    }
-    int Div(int _b)
-    {
-        if (_b != 0)
-        {
-            return (a / _b);
-        }
-        else
-        {
-            this->state.SetState(1);
-            return (0);
-        }
-    }
-    int Pow(int _b)
-    {
-        float c = this->value;
-        for (float i = 1; i < _b; i++)
-        {
-            this->value = this->value * c;
-        }
-        return (this->value);
+        return (this->state.GetState());
     }
     void SetState(int _state)
     {
         this->state.SetState(_state);
     }
-    int getState(){
-        this->state.GetState();
+
+    // ------------- operations -------------
+
+    void Add()
+    {
+        this->variable.setResult(this->variable.getA() + this->variable.getB());
     }
 
-    MyInt(int v)
+    void Mul()
     {
-        this->value = v;
-        state = State(0);
-    };
+        this->variable.setResult(this->variable.getA() * this->variable.getB());
+    }
+    void Sub()
+    {
+        this->variable.setResult(this->variable.getA() + this->variable.getB());
+    }
+    void Div()
+    {
+        if (this->variable.getB() != 0)
+        {
+            this->variable.setResult(this->variable.getA() / this->variable.getB());
+        }
+        else
+        {
+            this->state.SetState(1);
+        }
+    }
+    void Pow()
+    {
+        int temp = this->variable.getA();
+        for (float i = 1; i < this->variable.getB(); i++)
+        {
+            temp = temp * this->variable.getB();
+        }
+        this->variable.setResult(temp);
+    }
 };
-
-using namespace std;
 
 int main()
 {
-    int b;
+
     int z;
-    char op;
-    int result;
+    char _myOperator;
+    Calc obj;
 
     cout << "Podaj a" << endl;
     cin >> z;
-    MyInt obj(z);
+    obj.setA(z);
 
     cout << "Podaj operator" << endl;
-    cin >> op;
+    cin >> _myOperator;
+    obj.setOperator(_myOperator);
 
     cout << "Podaj b" << endl;
-    cin >> b;
+    cin >> z;
+    obj.setB(z);
 
-    switch (op)
+    switch (obj.getOperator()) // decide what operation to use
     {
     case '+':
     {
-        obj.Add(b);
+        obj.Add();
         break;
     }
     case '-':
     {
-        obj.Sub(b);
+        obj.Sub();
         break;
     }
     case '*':
     {
-        obj.Mul(b);
+        obj.Mul();
         break;
     }
     case '/':
     {
-        obj.Div(b);
+        obj.Div();
         break;
     }
     case '^':
     {
-        obj.Pow(b);
+        obj.Pow();
         break;
     }
 
@@ -130,11 +173,11 @@ int main()
         break;
     }
 
-    switch (obj.getState())
+    switch (obj.getState()) // decite to print reult or error
     {
     case 0:
     {
-        cout << "Wynik to: " << result << endl;
+        cout << "Wynik to: " << obj.getResult() << endl;
         break;
     }
     break;
@@ -146,9 +189,11 @@ int main()
     case 2:
     {
         cout << "błąd, nie znany operator!" << endl;
+        break;
     }
 
     default:
+        cout << "nieznany status";
         break;
     }
 
