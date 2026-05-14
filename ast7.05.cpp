@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 #include <stack>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 using namespace std;
 
@@ -11,6 +14,11 @@ public:
     string chunk;
     Node *left;
     Node *right;
+    int error_code = 0;
+    // 0 - OK,
+    // 1 - dzielenie przez zero,
+    // 2 - w chunku znalazł się niewłaściwy symbol,
+    // 3 - dzielenie przez zero i w chunku znalazł się niepoprawny symbol
 
     Node(const string &frag, Node *left, Node *right) : chunk(frag), left(left), right(right) {}
 
@@ -25,7 +33,101 @@ public:
     {
         return is_leaf() ? chunk : left->print() + chunk + right->print();
     }
+
+    float compute()
+    {
+        if (is_leaf())
+        {
+            return (stof(chunk));
+        }
+        else
+        {
+            if (chunk.compare("+") == 0)
+            {
+                if (error_code == 0)
+                {
+                    return (left->compute() + right->compute());
+                }
+                else
+                {
+                    error_code = error();
+                };
+            }
+            else if (chunk.compare("-") == 0)
+            {
+                if (error_code == 0)
+                {
+                    return (left->compute() - right->compute());
+                }
+                else
+                {
+                    error_code = error();
+                };
+            }
+            else if (chunk.compare("*") == 0)
+            {
+                if (error_code == 0)
+                {
+                    return (left->compute() * right->compute());
+                }
+                else
+                {
+                    error_code = error();
+                };
+            }
+            else if (chunk.compare("/") == 0) // obsługa / przez 0
+            {
+                if (right->compute() == 0)
+                {
+                    error_code = 11;
+                    cout << "dzielenie przez zero!" << endl;
+                }
+                else
+                {
+                    if (error_code == 0)
+                {
+                    return (left->compute() / right->compute());
+                }
+                else
+                {
+                    error_code = error();
+                };
+                }
+            }
+            else
+            {
+                error_code = 10;
+            }
+        }
+    }
+
+    int error()
+    {
+       if (left->error_code && right->error_code == 0)
+       {
+        return (left->error_code + right->error_code);
+       } else if (left->error_code || right->error_code == 1) {
+        return (1);
+       } else if (left->error_code || right->error_code == 2)
+       {
+        return(2);
+       } else 
+       {
+        return (3);
+       }
+    }
 };
+
+void print_ascii(Node *node, const string &prefix = "", bool isRight = true)
+{
+    if (!node) // sprawdzenie, czy jako node zostało przekazane nullptr
+        return;
+    if (node->right) // sprawdzenie, czy right != nullptr
+        print_ascii(node->right, prefix + (isRight ? "    " : "│   "), true);
+    cout << prefix << (isRight ? "┌── " : "└── ") << node->chunk << "\n";
+    if (node->left) // sprawdzenie, czy left != nullptr
+        print_ascii(node->left, prefix + (isRight ? "│   " : "    "), false);
+}
 
 /**
  * expr_as = e +,- e
@@ -151,20 +253,33 @@ public:
     {
         ast = expr_as();
 
-        cout << (Nawiasy() ? "Blad nawiasow\n" : "Liczba nawiasow sie zgadza\n") << endl;
+        cout << (Nawiasy() ? "Błąd nawiasów\n" : "Liczba nawiasów się zgadza\n") << endl;
     }
 };
 
 int main()
 {
-    string s = "(2+3)*(4-1)+2*(2+2/(3-2))";
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
+    // string s = "(22+3)*(4-1)+2*(2+2/(3-2))";
     // string s = "2-32*18+3/2";
-    cout << "Wyrazenie: " << s << "\n\n";
+    string s = "2+2*2/0";
+    cout << "Wyrażenie: " << s << "\n\n";
 
     Parser p = Parser(s);
-
     p.parse();
+    cout << p.ast->error_code;
+    if (p.ast->error_code != 0)
+    {
+        cout << "błąd: " << p.ast->error_code;
+    }
     p.print_ast();
+    cout << "\n";
+    print_ascii(p.ast);
+
+    cout << "Wynik: " << p.ast->compute();
 
     return 0;
 }
